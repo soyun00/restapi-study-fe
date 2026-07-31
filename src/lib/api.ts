@@ -88,3 +88,19 @@ export async function getUsers(accessToken: string): Promise<User[]> {
 
     return res.json();
 }
+
+// 본인 정보만 조회 - 일반 사용자용 (Admin이 아니어도 접근 가능)
+export async function getMe(accessToken: string): Promise<User> {
+    const res = await fetch(`${API_BASE_URL}/user/me`, {
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
+    });
+
+    if (!res.ok) {
+        const problem: ProblemDetails | null = await res.json().catch(() => null);
+        throw new Error(problem?.detail ?? "내 정보를 불러오지 못했습니다.");
+    }
+
+    return res.json();
+}
