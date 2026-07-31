@@ -58,6 +58,11 @@ export interface RegisterRequest {
     point: number;
 }
 
+export interface RefreshResponse {
+    token: string;
+    refreshToken: string;
+}
+
 // 회원가입 - AllowAnonymous라 토큰없이 호출
 export async function register(data: RegisterRequest): Promise<User> {
     const res = await fetch(`${API_BASE_URL}/user`, {
@@ -103,4 +108,33 @@ export async function getMe(accessToken: string): Promise<User> {
     }
 
     return res.json();
+}
+
+// Access Token 만료 시 재로그인없이 갱신
+export async function refresh(refreshToken: string): Promise<RefreshResponse> {
+    const res = await fetch(`${API_BASE_URL}/refresh`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({refreshToken}),
+    });
+    
+    if (!res.ok) {
+        const problem: ProblemDetails | null = await res.json().catch(() => null);
+        throw new Error(problem?.detail ?? "Access Token 갱신에 실패했습니다.");
+    }
+    return res.json();
+}
+
+// 로그아웃 - 서버에 저장된 Refresh Token을 무효화
+export async function logout(refreshToken: string): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/logout`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({refreshToken}),
+    });
+    
+    if (!res.ok) {
+        const problem: ProblemDetails | null = await res.json().catch(() => null);
+        throw new Error(problem?.detail ?? "로그아웃에 실패했습니다.")
+    }
 }
