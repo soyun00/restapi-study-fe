@@ -1,11 +1,11 @@
 ﻿"use client";
 
 import { useState, useEffect } from "react";
-import { getUsers, getMe, refresh, logout, User } from "@/lib/api";
+import { getUsers, getMe, refreshAccessToken, logout, User } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
 export default function UsersPage() {
-    const { accessToken, refreshToken, setTokens, clearTokens } = useAuth();
+    const { accessToken, setAccessToken } = useAuth();
     const [users, setUsers] = useState<User[]>([]);
     const [isAdminView, setIsAdminView] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -28,12 +28,10 @@ export default function UsersPage() {
             });
     }, [accessToken]);
 
-    // handleRefresh, handleLogout은 return보다 위에 있어야 아래 JSX에서 쓸 수 있다
     const handleRefresh = async () => {
-        if (!refreshToken) return;
         try {
-            const data = await refresh(refreshToken);
-            setTokens(data.token, data.refreshToken);
+            const data = await refreshAccessToken(); // 쿠키에서 자동으로 refreshToken을 꺼내 씀
+            setAccessToken(data.token);
             alert("토큰 갱신 완료");
         } catch (err) {
             alert(err instanceof Error ? err.message : "갱신 실패");
@@ -41,10 +39,9 @@ export default function UsersPage() {
     };
 
     const handleLogout = async () => {
-        if (!refreshToken) return;
         try {
-            await logout(refreshToken);
-            clearTokens();
+            await logout(); // 마찬가지로 쿠키 기반, 인자 없음
+            setAccessToken(null);
         } catch (err) {
             alert(err instanceof Error ? err.message : "로그아웃 실패");
         }

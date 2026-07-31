@@ -4,44 +4,33 @@
 // 사용자 입력에 반응해야 하는 컴포넌트 = "use client"
 "use client";
 
-import {useState, FormEvent} from "react";
-import {login} from "@/lib/api";
-import {useAuth} from "@/context/AuthContext";
+import { useState, FormEvent } from "react";
+import { login } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 
 export default function LoginPage() {
-    // 입력 필드 값을 담아둘 상태 (state)
-    // 사용자가 타이핑할 때마다 이 값들이 바뀌고, 컴포넌트가 다시 렌더링됨
     const [userid, setUserid] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
-    
-    // Context에서 setTokens 함수와 현재 accessToken을 꺼내옴
-    const { accessToken, setTokens } = useAuth();
-    
-    // 폼 제출(로그인 버튼 클릭 or 엔터) 시 실행되는 핸들러
-    const handlerSubmit = async (e: FormEvent) => {
-        e.preventDefault(); // 기본 동작(페이지 새로고침)을 막는다.
+    const { accessToken, setAccessToken } = useAuth();
+
+    const handleSubmit = async (e: FormEvent) => {
+        e.preventDefault();
         setError(null);
 
         try {
-            // lib/api.ts에서 만든 login 함수 호출.
             const data = await login({ userid, password });
-            setTokens(data.token, data.refreshToken);
+            setAccessToken(data.token); // refreshToken은 이제 신경 쓸 필요 없음 - 쿠키가 알아서 처리됨
         } catch (err) {
-            // login()에서 throw한 에러를 잡아서 화면에 표시.
             setError(err instanceof Error ? err.message : "알 수 없는 오류");
         }
     };
-    
+
     return (
-        <form onSubmit={handlerSubmit}>
+        <form onSubmit={handleSubmit}>
             <div>
-                <input
-                    value={userid}
-                    onChange={e => setUserid(e.target.value)}
-                    placeholder="아이디"
-                />
+                <input value={userid} onChange={(e) => setUserid(e.target.value)} placeholder="아이디" />
             </div>
             <div>
                 <input
@@ -53,14 +42,13 @@ export default function LoginPage() {
             </div>
             <button type="submit">로그인</button>
 
-            {/* accessToken이 있을 때만 성공 메시지 + 목록 이동 링크 표시 */}
             {accessToken && (
                 <>
                     <p>로그인 성공. Access Token: {accessToken.slice(0, 20)}...</p>
                     <Link href="/users">사용자 목록 보기</Link>
                 </>
             )}
-            {error && <p style={{color: "red"}}>{error}</p>}
+            {error && <p style={{ color: "red" }}>{error}</p>}
         </form>
     );
 }

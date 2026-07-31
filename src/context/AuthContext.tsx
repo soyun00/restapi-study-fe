@@ -5,9 +5,7 @@ import { createContext, useContext, useState, ReactNode } from "react";
 // 로그인 상태(토큰)를 앱 전체 컴포넌트에서 공유하기 위한 Context.
 interface AuthContextValue {
     accessToken: string | null;
-    refreshToken: string | null;
-    setTokens: (accessToken: string, refreshToken: string) => void;
-    clearTokens: () => void;
+    setAccessToken: (token: string | null) => void;
 }
 
 // Context의 기본값은 undefined로 두고, Provider 밖에서 쓰면 에러가 나도록 함
@@ -31,7 +29,7 @@ export function AuthProvider({children}: {children: ReactNode}) {
     };
     
     return (
-        <AuthContext.Provider value={{ accessToken, refreshToken, setTokens, clearTokens }}>
+        <AuthContext.Provider value={{ accessToken, setAccessToken}}>
             {children}
         </AuthContext.Provider>
     );
