@@ -7,6 +7,7 @@
 import {useState, FormEvent} from "react";
 import {login} from "@/lib/api";
 import {useAuth} from "@/context/AuthContext";
+import Link from "next/link";
 
 export default function LoginPage() {
     // 입력 필드 값을 담아둘 상태 (state)
@@ -52,8 +53,13 @@ export default function LoginPage() {
             </div>
             <button type="submit">로그인</button>
 
-            {/* result나 error가 null이 아닐 때만 조건부로 렌더링 */}
-            {accessToken && <p>로그인 성공. Access Token: {accessToken.slice(0, 20)}...</p>}
+            {/* accessToken이 있을 때만 성공 메시지 + 목록 이동 링크 표시 */}
+            {accessToken && (
+                <>
+                    <p>로그인 성공. Access Token: {accessToken.slice(0, 20)}...</p>
+                    <Link href="/users">사용자 목록 보기</Link>
+                </>
+            )}
             {error && <p style={{color: "red"}}>{error}</p>}
         </form>
     );

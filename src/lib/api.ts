@@ -42,3 +42,49 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
     // 성공 시 응답 바디를 LoginResponse 타입으로 파싱해서 변환
     return res.json();
 }
+
+// UserResponseDto와 필드를 맞춘 타입
+export interface User {
+    id: number;
+    userid: string;
+    username: string;
+    point: number;
+}
+
+export interface RegisterRequest {
+    userid: string;
+    username: string;
+    password: string;
+    point: number;
+}
+
+// 회원가입 - AllowAnonymous라 토큰없이 호출
+export async function register(data: RegisterRequest): Promise<User> {
+    const res = await fetch(`${API_BASE_URL}/user`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data),
+    });
+    
+    if (!res.ok) {
+        const problem: ProblemDetails | null = await res.json().catch(() => null);
+        throw new Error(problem?.detail?? "회원가입에 실패했습니다.");
+    }
+    return res.json();
+}
+
+// 사용자 목록 조회 - RequireAuthorization()이 걸려있어 Bearer 토큰 필수
+export async function getUsers(accessToken: string): Promise<User[]> {
+    const res = await fetch(`${API_BASE_URL}/user`, {
+        headers: {
+            Authorization: `Bearer ${accessToken}`, // 이게 없으면 401
+        },
+    });
+
+    if (!res.ok) {
+        const problem: ProblemDetails | null = await res.json().catch(() => null);
+        throw new Error(problem?.detail ?? "사용자 목록을 불러오지 못했습니다.");
+    }
+
+    return res.json();
+}
