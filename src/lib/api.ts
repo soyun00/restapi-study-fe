@@ -1,0 +1,44 @@
+﻿// 로그인 요청 시 서버로 보낼 바디 형태
+// 백엔드의 LoginRequestDto(Userid, Password) 와 필드 이름 맞춤
+// ASP.NET Core가 JSON 직렬화할 때 기본적으로 camelCase로 변환하므로
+// C# 쪽 Userid/Password 가 여기선 userid/password
+export interface LoginRequest {
+    userid: string;
+    password: string;
+}
+
+// login 성공 시 서버가 돌려주는 응답 형태
+// TokenService에서 발급하는 Access Token / Refresh Token 두 개
+export interface LoginResponse {
+    token: string;
+    refreshToken: string;
+}
+
+// 실패 시 서버가 ProblemDetails 형식으로 응답을 줌
+// detail 메시지만 타입으로 정의
+interface ProblemDetails {
+    detail?: string;
+}
+
+// .env.local에 정의한 API 주소 읽어옴
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+// 로그인 API 호출 함수
+// 성공하면 LoginResponse 반환, 실패하면 에러 던짐
+export async function login(data: LoginRequest): Promise<LoginResponse> {
+    const res = await fetch(`${API_BASE_URL}/login`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data), // 객체를 JSON 문자열로 변환해서 전송
+    });
+    
+    // res.ok는 상태 코드가 200-299 범위일 때만 true
+    // 401(로그인 실패), 429(Rate Limit 초과) 는 걸림
+    if (!res.ok) {
+        const problem: ProblemDetails | null = await res.json().catch(() => null);
+        throw new Error(problem?.detail ?? "로그인에 실패했습니다.");
+    }
+    
+    // 성공 시 응답 바디를 LoginResponse 타입으로 파싱해서 변환
+    return res.json();
+}
