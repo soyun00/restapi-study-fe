@@ -6,16 +6,17 @@
 
 import {useState, FormEvent} from "react";
 import {login} from "@/lib/api";
+import {useAuth} from "@/context/AuthContext";
 
 export default function LoginPage() {
     // 입력 필드 값을 담아둘 상태 (state)
     // 사용자가 타이핑할 때마다 이 값들이 바뀌고, 컴포넌트가 다시 렌더링됨
     const [userid, setUserid] = useState("");
     const [password, setPassword] = useState("");
-    
-    // 로그인 성공/실패 결과를 화면에 보여주기 위한 상태
-    const [result, setResult] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    
+    // Context에서 setTokens 함수와 현재 accessToken을 꺼내옴
+    const { accessToken, setTokens } = useAuth();
     
     // 폼 제출(로그인 버튼 클릭 or 엔터) 시 실행되는 핸들러
     const handlerSubmit = async (e: FormEvent) => {
@@ -25,9 +26,7 @@ export default function LoginPage() {
         try {
             // lib/api.ts에서 만든 login 함수 호출.
             const data = await login({ userid, password });
-            // 성공하면 Access Token 앞부분만 잘라서 확인용으로 표시.
-            // (실제 저장 방식은 아직 정하지 않았고, 지금은 동작 확인이 목적)
-            setResult(`로그인 성공. Access Token: ${data.token.slice(0, 20)}...`);
+            setTokens(data.token, data.refreshToken);
         } catch (err) {
             // login()에서 throw한 에러를 잡아서 화면에 표시.
             setError(err instanceof Error ? err.message : "알 수 없는 오류");
@@ -54,7 +53,7 @@ export default function LoginPage() {
             <button type="submit">로그인</button>
 
             {/* result나 error가 null이 아닐 때만 조건부로 렌더링 */}
-            {result && <p>{result}</p>}
+            {accessToken && <p>로그인 성공. Access Token: {accessToken.slice(0, 20)}...</p>}
             {error && <p style={{color: "red"}}>{error}</p>}
         </form>
     );
